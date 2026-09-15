@@ -33,13 +33,15 @@ const taskSchema = {
 };
 
 async function runAutonomousParser() {
-    // Simulated messy, unorganized real-world data incoming to your system
     const messyInput = "Hey team, we urgently need a responsive web landing page built using Next.js and Tailwind CSS for the new client project. It should probably take about 6 hours to get the initial draft done.";
 
-    console.log("📡 Sending data to the AI Architect...");
+    let response;
+    
+    console.log("📡 Sending data to the Primary AI Architect (gemini-3.6-flash)...");
 
     try {
-        const response = await ai.models.generateContent({
+        // Attempt Route 1: Primary latest infrastructure
+        response = await ai.models.generateContent({
             model: "gemini-3.6-flash",
             contents: messyInput,
             config: {
@@ -48,31 +50,50 @@ async function runAutonomousParser() {
                 systemInstruction: "You are an advanced data extraction agent. Convert messy text inputs into structured task data structures perfectly matching the requested schema."
             }
         });
+    } catch (primaryError: any) {
+        // If the primary server is busy (503), catch the error and execute fallback route instantly
+        if (primaryError?.status === 503 || primaryError?.message?.includes("demand")) {
+            console.warn("\n⚠️ Primary server is overloaded. Initiating automated failover script...");
+            console.log("📡 Connecting to Backup Stable Engine (gemini-2.0-flash)...");
+            
+            try {
+                // Attempt Route 2: Rock-solid fallback model
+                response = await ai.models.generateContent({
+                    model: "gemini-2.0-flash",
+                    contents: messyInput,
+                    config: {
+                        responseMimeType: "application/json",
+                        responseSchema: taskSchema,
+                        systemInstruction: "You are an advanced data extraction agent. Convert messy text inputs into structured task data structures perfectly matching the requested schema."
+                    }
+                });
+            } catch (fallbackError) {
+                throw new Error(`Both primary and backup systems failed. Engine offline: ${fallbackError}`);
+            }
+        } else {
+            // If it's a different error (like a wrong API key), pass it through normally
+            throw primaryError;
+        }
+    }
 
-        // SAFETY CHECK: Ensure response.text actually contains a string
-        if (!response.text) {
-            throw new Error("The AI returned an empty response.");
+    // ========================================================
+    // 💾 FILE SYSTEM PROCESSOR (Runs smoothly regardless of model)
+    // ========================================================
+    try {
+        if (!response || !response.text) {
+            throw new Error("The AI engine returned an empty text payload.");
         }
 
-        // Now TypeScript knows for a fact that response.text is a valid string
         const cleanData = JSON.parse(response.text);
 
         console.log("\n🎯 Execution Success! Structured Object Received:");
         console.log(cleanData);
         
-        console.log(`\n🤖 System Automated Action: Triggering workflow for "${cleanData.taskName}" with ${cleanData.priority} priority.`);
-
-        // ==========================================
-        // 💾 NEW AUTONOMOUS ACTION: CREATE FILE
-        // ==========================================
         const reportFolder = path.join(process.cwd(), "reports");
-        
-        // If the 'reports' folder doesn't exist, create it instantly
         if (!fs.existsSync(reportFolder)) {
             fs.mkdirSync(reportFolder);
         }
 
-        // Design a beautiful markdown layout using the AI's data variables
         const markdownLayout = `# 🤖 Autonomous Action Report
 Generated on: ${new Date().toLocaleString()}
 
@@ -88,18 +109,16 @@ ${cleanData.suggestedTools.map((tool: string) => `- ${tool}`).join("\n")}
 *System Status: Processed unsupervised by Autonomous Agent Engine v1.0*
 `;
 
-        // Turn the task name into a perfect, web-safe filename
         const cleanFilename = `${cleanData.taskName.toLowerCase().replace(/[^a-z0-9]+/g, "-")}.md`;
         const finalPath = path.join(reportFolder, cleanFilename);
 
-        // Physically write the file to your hard drive
         fs.writeFileSync(finalPath, markdownLayout, "utf8");
-
         console.log(`\n💾 FILE SYSTEM SUCCESS! Report created at: .\\reports\\${cleanFilename}`);
 
     } catch (error) {
-        console.error("❌ An error occurred during execution:", error);
+        console.error("❌ Critical Processing Error:", error);
     }
 }
+
 
 runAutonomousParser();
