@@ -1,11 +1,12 @@
 import { GoogleGenAI, Type } from "@google/genai";
-import "dotenv/config"; //  This automatically loads your hidden .env variables into memory
-// 1. Initialize the AI client. It automatically searches for your API key.
+import "dotenv/config"; // This automatically loads your hidden .env variables into memory
+import * as fs from "fs"; //  Native tool to create files on your machine
+import * as path from "path"; //  Native tool to manage safe folder structures
+
+// 1. Initialize the AI client securely using your .env file
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
-
 // 2. Define the exact structure (Schema) we want the AI to reply with.
-// This ensures the AI cannot reply with random paragraphs.
 const taskSchema = {
     type: Type.OBJECT,
     properties: {
@@ -60,6 +61,41 @@ async function runAutonomousParser() {
         console.log(cleanData);
         
         console.log(`\n🤖 System Automated Action: Triggering workflow for "${cleanData.taskName}" with ${cleanData.priority} priority.`);
+
+        // ==========================================
+        // 💾 NEW AUTONOMOUS ACTION: CREATE FILE
+        // ==========================================
+        const reportFolder = path.join(process.cwd(), "reports");
+        
+        // If the 'reports' folder doesn't exist, create it instantly
+        if (!fs.existsSync(reportFolder)) {
+            fs.mkdirSync(reportFolder);
+        }
+
+        // Design a beautiful markdown layout using the AI's data variables
+        const markdownLayout = `# 🤖 Autonomous Action Report
+Generated on: ${new Date().toLocaleString()}
+
+### 📋 Task Specifications
+* **Task Name:** ${cleanData.taskName}
+* **Priority Level:** ${cleanData.priority}
+* **Estimated Execution Time:** ${cleanData.estimatedHours} Hours
+
+### 🛠️ Required Technical Stack
+${cleanData.suggestedTools.map((tool: string) => `- ${tool}`).join("\n")}
+
+---
+*System Status: Processed unsupervised by Autonomous Agent Engine v1.0*
+`;
+
+        // Turn the task name into a perfect, web-safe filename
+        const cleanFilename = `${cleanData.taskName.toLowerCase().replace(/[^a-z0-9]+/g, "-")}.md`;
+        const finalPath = path.join(reportFolder, cleanFilename);
+
+        // Physically write the file to your hard drive
+        fs.writeFileSync(finalPath, markdownLayout, "utf8");
+
+        console.log(`\n💾 FILE SYSTEM SUCCESS! Report created at: .\\reports\\${cleanFilename}`);
 
     } catch (error) {
         console.error("❌ An error occurred during execution:", error);
