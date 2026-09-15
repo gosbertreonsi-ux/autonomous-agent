@@ -14,7 +14,11 @@
     "@google/genai": "^2.22.0",
     "@types/node": "^22.5.4",
     "dotenv": "^17.4.2",
+    "express": "^5.2.1",
     "ts-node": "^10.9.2",
     "typescript": "^5.5.4"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6"
   }
 }
