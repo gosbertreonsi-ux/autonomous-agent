@@ -1,19 +1,27 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import "dotenv/config";
-import express from "express"; // Import Express web server framework
+import express from "express"; 
 import * as fs from "fs";
 import * as path from "path";
-import { db } from "./src/prisma/db"; // Clean extensionless TypeScript module loader path mapping
+import { db } from "./src/prisma/db.js";
 
 const app = express();
 const PORT = 3000;
 
-// Enable Express server to automatically read incoming JSON payloads
 app.use(express.json());
-// Serve the frontend user interface files from the public folder
 app.use(express.static(path.join(process.cwd(), "public")));
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+// 🎯 THE FIX: Force cross-platform environment variable detection.
+// This grabs your token even if Windows reads it as lowercase or wraps it in strings.
+const activeApiKey = process.env.GEMINI_API_KEY || process.env.gemini_api_key || "";
+
+if (!activeApiKey) {
+    console.error("⚠️ CRITICAL WARNING: No Gemini API Key detected inside your local .env file setup!");
+}
+
+// Instantiate the AI engine with the verified active key string directly
+const ai = new GoogleGenAI({ apiKey: activeApiKey });
+
 
 const taskSchema = {
     type: Type.OBJECT,
@@ -35,8 +43,9 @@ app.get("/run-agent", async (req, res) => {
     let response;
 
     try {
+        // 🎯 FIX 1: Change your primary model target string here to gemini-3.6-flash
         response = await ai.models.generateContent({
-            model: "gemini-3.6-flash",
+            model: "gemini-3.6-flash", 
             contents: messyInput,
             config: {
                 responseMimeType: "application/json",
@@ -45,11 +54,13 @@ app.get("/run-agent", async (req, res) => {
             }
         });
     } catch (primaryError: any) {
-        if (primaryError?.status === 503 || primaryError?.message?.includes("demand")) {
-            console.warn("⚠️ Primary model overloaded. Activating gemini-1.5-flash failover mechanism...");
+        // Check if the error is due to hitting Google's rate limits (429) or model overload
+        if (primaryError?.status === 429 || primaryError?.status === 503 || primaryError?.message?.includes("quota")) {
+            console.warn("⚠️ Primary model quota exhausted. Activating gemini-3.5-flash-lite backup pipeline...");
             try {
+                // 🎯 THE FIX: Target the distinct Flash-Lite model tier to bypass the 20-request constraint
                 response = await ai.models.generateContent({
-                    model: "gemini-1.5-flash",
+                    model: "gemini-3.5-flash-lite", 
                     contents: messyInput,
                     config: {
                         responseMimeType: "application/json",
@@ -58,12 +69,16 @@ app.get("/run-agent", async (req, res) => {
                     }
                 });
             } catch (fallbackError) {
-                return res.status(500).json({ error: "Both primary and backup models failed.", details: fallbackError });
+                return res.status(500).json({ error: "Both primary and fallback quota channels are fully exhausted.", details: fallbackError });
             }
         } else {
+            console.error("❌ Google Engine Error Details:", primaryError.message);
             return res.status(500).json({ error: "API authentication or processing failure.", details: primaryError.message });
         }
     }
+
+
+
 
     try {
         if (!response || !response.text) {
