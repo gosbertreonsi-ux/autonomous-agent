@@ -25,6 +25,7 @@
   "devDependencies": {
     "@prisma/cli-engine": "^0.4.0",
     "@types/express": "^5.0.6",
-    "prisma": "^8.0.0-rc.15"
+    "prisma": "^8.0.0-rc.15",
+    "tsx": "^4.23.13"
   }
 }

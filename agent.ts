@@ -3,6 +3,7 @@ import "dotenv/config";
 import express from "express"; // Import Express web server framework
 import * as fs from "fs";
 import * as path from "path";
+import { db } from "./src/prisma/db"; // Clean extensionless TypeScript module loader path mapping
 
 const app = express();
 const PORT = 3000;
@@ -23,10 +24,8 @@ const taskSchema = {
     required: ["taskName", "priority", "estimatedHours", "suggestedTools"],
 };
 
-// 🎯 CREATE THE WEB ENDPOINT: Listening for incoming web requests
+// 🎯 ROUTE 1: Trigger Autonomous Processing and Cloud Database Insertion
 app.get("/run-agent", async (req, res) => {
-    // You can now pass ANY custom messy text via the query parameters in your browser
-    // Default fallback text is provided if no custom parameter is passed
     const messyInput = (req.query.text as string) || 
         "Hey team, we urgently need a responsive web landing page built using Next.js and Tailwind CSS for the new client project. It should probably take about 6 hours to get the initial draft done.";
 
@@ -66,7 +65,6 @@ app.get("/run-agent", async (req, res) => {
         }
     }
 
-    // Process and Write File System Asset
     try {
         if (!response || !response.text) {
             throw new Error("Empty payload from AI engine.");
@@ -97,10 +95,21 @@ ${cleanData.suggestedTools.map((tool: string) => `- ${tool}`).join("\n")}
         fs.writeFileSync(finalPath, markdownLayout, "utf8");
         console.log(`💾 File System Automation Success: .\\reports\\${cleanFilename}`);
 
-        // Return the clean JSON back to the web browser interface
+        // 🗄️ PERFECTED PRISMA 8 CLOUD INSERT ENGINE PIPELINE
+        const savedDatabaseRecord = await db.orm.public.AgentLog.create({
+            rawInputText: messyInput,
+            taskName: cleanData.taskName,
+            priority: cleanData.priority,
+            estimatedHours: Number(cleanData.estimatedHours),
+            generatedFile: cleanFilename
+        });
+
+        console.log(`☁️ Cloud Sync Success! Pushed record sequence row hash ID: ${savedDatabaseRecord.id}`);
+
         return res.json({
             status: "SUCCESS",
             message: `Report asset generated cleanly at .\\reports\\${cleanFilename}`,
+            cloudRecordId: savedDatabaseRecord.id,
             extractedData: cleanData
         });
 
@@ -110,8 +119,36 @@ ${cleanData.suggestedTools.map((tool: string) => `- ${tool}`).join("\n")}
     }
 });
 
+/**
+ * 🔍 ROUTE 2: Fetch and View All Historical Agent Logs
+ * Target URL: http://localhost:3000/logs
+ */
+app.get('/logs', async (req, res) => {
+  try {
+    // 🧠 Perfected Prisma 8 Native Query Engine Functional Sort Layout
+    const allLogs = await db.orm.public.AgentLog
+      .orderBy((log) => log.createdAt.desc())
+      .all();
+
+    return res.json({
+      success: true,
+      totalCount: allLogs.length,
+      logs: allLogs
+    });
+
+  } catch (error: any) {
+    console.error("Cloud Database Retrieval Failed:", error);
+    return res.status(500).json({ 
+      success: false, 
+      message: "Failed to retrieve records from the cloud database.",
+      details: error.message 
+    });
+  }
+});
+
 // Start the server infrastructure
 app.listen(PORT, () => {
     console.log(`\n🚀 AUTONOMOUS ENGINE SERVER ONLINE!`);
-    console.log(`📡 Listening for web triggers at: http://localhost:${PORT}/run-agent\n`);
+    console.log(`📡 Listening for web triggers at: http://localhost:${PORT}/run-agent`);
+    console.log(`🔎 View your continuous historical cloud records data feed at: http://localhost:${PORT}/logs\n`);
 });
