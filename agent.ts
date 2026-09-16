@@ -10,6 +10,8 @@ const PORT = 3000;
 
 // Enable Express server to automatically read incoming JSON payloads
 app.use(express.json());
+// 🎯 INITIAL ADDITION: Serve the frontend user interface files from the public folder
+app.use(express.static(path.join(process.cwd(), "public")));
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
@@ -33,7 +35,6 @@ app.get("/run-agent", async (req, res) => {
     let response;
 
     try {
-        // Route 1: Try latest model
         response = await ai.models.generateContent({
             model: "gemini-3.6-flash",
             contents: messyInput,
@@ -47,7 +48,6 @@ app.get("/run-agent", async (req, res) => {
         if (primaryError?.status === 503 || primaryError?.message?.includes("demand")) {
             console.warn("⚠️ Primary model overloaded. Activating gemini-2.0-flash failover mechanism...");
             try {
-                // Route 2: Fallback stability model
                 response = await ai.models.generateContent({
                     model: "gemini-2.0-flash",
                     contents: messyInput,
@@ -95,7 +95,7 @@ ${cleanData.suggestedTools.map((tool: string) => `- ${tool}`).join("\n")}
         fs.writeFileSync(finalPath, markdownLayout, "utf8");
         console.log(`💾 File System Automation Success: .\\reports\\${cleanFilename}`);
 
-        // 🗄️ PERFECTED PRISMA 8 CLOUD INSERT ENGINE PIPELINE
+        // 🗄️ NATIVE PRISMA 8 PIPELINE MUTATION
         const savedDatabaseRecord = await db.orm.public.AgentLog.create({
             rawInputText: messyInput,
             taskName: cleanData.taskName,
@@ -119,13 +119,9 @@ ${cleanData.suggestedTools.map((tool: string) => `- ${tool}`).join("\n")}
     }
 });
 
-/**
- * 🔍 ROUTE 2: Fetch and View All Historical Agent Logs
- * Target URL: http://localhost:3000/logs
- */
+// 🎯 ROUTE 2: Fetch and View All Historical Agent Logs
 app.get('/logs', async (req, res) => {
   try {
-    // 🧠 Perfected Prisma 8 Native Query Engine Functional Sort Layout
     const allLogs = await db.orm.public.AgentLog
       .orderBy((log) => log.createdAt.desc())
       .all();
@@ -148,7 +144,6 @@ app.get('/logs', async (req, res) => {
 
 // Start the server infrastructure
 app.listen(PORT, () => {
-    console.log(`\n🚀 AUTONOMOUS ENGINE SERVER ONLINE!`);
-    console.log(`📡 Listening for web triggers at: http://localhost:${PORT}/run-agent`);
-    console.log(`🔎 View your continuous historical cloud records data feed at: http://localhost:${PORT}/logs\n`);
+    console.log(`\n🚀 FULL-STACK AUTONOMOUS SYSTEMS PORTAL ONLINE!`);
+    console.log(`🖥️ Open dashboard interface directly at: http://localhost:${PORT}`);
 });
