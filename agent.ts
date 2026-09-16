@@ -10,7 +10,7 @@ const PORT = 3000;
 
 // Enable Express server to automatically read incoming JSON payloads
 app.use(express.json());
-// 🎯 INITIAL ADDITION: Serve the frontend user interface files from the public folder
+// Serve the frontend user interface files from the public folder
 app.use(express.static(path.join(process.cwd(), "public")));
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
@@ -46,22 +46,22 @@ app.get("/run-agent", async (req, res) => {
         });
     } catch (primaryError: any) {
         if (primaryError?.status === 503 || primaryError?.message?.includes("demand")) {
-            console.warn("⚠️ Primary model overloaded. Activating gemini-2.0-flash failover mechanism...");
+            console.warn("⚠️ Primary model overloaded. Activating gemini-1.5-flash failover mechanism...");
             try {
                 response = await ai.models.generateContent({
-                    model: "gemini-2.0-flash",
+                    model: "gemini-1.5-flash",
                     contents: messyInput,
                     config: {
                         responseMimeType: "application/json",
                         responseSchema: taskSchema,
-                        systemInstruction: "You are an advanced data extraction agent."
+                        systemInstruction: "You are an advanced data extraction agent. Convert messy text inputs into structured task data structures perfectly matching the requested schema."
                     }
                 });
             } catch (fallbackError) {
                 return res.status(500).json({ error: "Both primary and backup models failed.", details: fallbackError });
             }
         } else {
-            return res.status(500).json({ error: "API authentication or processing failure.", details: primaryError });
+            return res.status(500).json({ error: "API authentication or processing failure.", details: primaryError.message });
         }
     }
 
@@ -95,7 +95,7 @@ ${cleanData.suggestedTools.map((tool: string) => `- ${tool}`).join("\n")}
         fs.writeFileSync(finalPath, markdownLayout, "utf8");
         console.log(`💾 File System Automation Success: .\\reports\\${cleanFilename}`);
 
-        // 🗄️ NATIVE PRISMA 8 PIPELINE MUTATION
+        // 🗄️ PRISMA 8 PIPELINE MUTATION
         const savedDatabaseRecord = await db.orm.public.AgentLog.create({
             rawInputText: messyInput,
             taskName: cleanData.taskName,
@@ -119,17 +119,29 @@ ${cleanData.suggestedTools.map((tool: string) => `- ${tool}`).join("\n")}
     }
 });
 
-// 🎯 ROUTE 2: Fetch and View All Historical Agent Logs
+/**
+ * 🔍 ROUTE 2: Fetch and View All Historical Agent Logs
+ * Target URL: http://localhost:3000/logs
+ */
 app.get('/logs', async (req, res) => {
+  const searchKeyword = req.query.search as string;
+
   try {
+    // Fetch all logs ordered by creation date natively
     const allLogs = await db.orm.public.AgentLog
       .orderBy((log) => log.createdAt.desc())
       .all();
 
+    // 🎯 STABLE ENGINE FILTERING: If a search keyword exists, we filter the array 
+    // safely in memory. This completely bypasses the Prisma 8 database compiler bugs!
+    const filteredLogs = searchKeyword
+      ? allLogs.filter(log => log.taskName.toLowerCase().includes(searchKeyword.toLowerCase()))
+      : allLogs;
+
     return res.json({
       success: true,
-      totalCount: allLogs.length,
-      logs: allLogs
+      totalCount: filteredLogs.length,
+      logs: filteredLogs
     });
 
   } catch (error: any) {
@@ -142,8 +154,8 @@ app.get('/logs', async (req, res) => {
   }
 });
 
-// Start the server infrastructure
+
 app.listen(PORT, () => {
     console.log(`\n🚀 FULL-STACK AUTONOMOUS SYSTEMS PORTAL ONLINE!`);
-    console.log(`🖥️ Open dashboard interface directly at: http://localhost:${PORT}`);
+    console.log(`🖥️ Open dashboard interface directly at: http://localhost:${PORT}\n`);
 });

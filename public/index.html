@@ -3,62 +3,117 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Autonomous AI Systems Operator</title>
+    <title>Autonomous Engine Control Panel</title>
     <style>
-        * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
-        body { background: #0f172a; color: #f8fafc; margin: 0; padding: 40px; }
-        .container { max-width: 1100px; margin: 0 auto; }
-        header { border-bottom: 1px solid #334155; padding-bottom: 20px; margin-bottom: 40px; }
-        h1 { margin: 0; color: #38bdf8; font-size: 28px; }
-        p { color: #94a3b8; margin: 5px 0 0; }
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; }
-        .card { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 24px; }
-        h2 { margin-top: 0; font-size: 18px; color: #f1f5f9; border-bottom: 1px solid #334155; padding-bottom: 10px; }
-        textarea { wIDth: 100%; height: 120px; background: #0f172a; border: 1px solid #475569; border-radius: 8px; color: #fff; padding: 12px; font-size: 14px; resize: none; }
-        button { background: #0284c7; color: #fff; border: none; border-radius: 8px; padding: 12px 24px; font-weight: 600; cursor: pointer; margin-top: 15px; wIDth: 100%; transition: background 0.2s; }
-        button:hover { background: #0369a1; }
-        #statusMessage { margin-top: 15px; padding: 12px; border-radius: 6px; display: none; font-size: 14px; }
-        .success { background: #065f46; color: #34d399; }
-        .loading { background: #1e3a8a; color: #60a5fa; }
-        table { wIDth: 100%; border-collapse: collapse; margin-top: 15px; font-size: 14px; }
-        th { text-align: left; background: #0f172a; padding: 10px; color: #94a3b8; border-bottom: 2px solid #334155; }
-        td { padding: 12px 10px; border-bottom: 1px solid #334155; color: #cbd5e1; }
-        .badge { padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; }
-        .badge-high { background: #991b1b; color: #fca5a5; }
-        .badge-medium { background: #854d0e; color: #fde047; }
-        .badge-low { background: #065f46; color: #34d399; }
+        :root {
+            --bg-gradient: linear-gradient(135deg, #0b0f17 0%, #111827 100%);
+            --card-bg: #111827;
+            --card-border: #1f2937;
+            --accent-blue: #38bdf8;
+            --text-main: #f8fafc;
+            --text-muted: #6b7280;
+            --input-bg: #030712;
+            --success-bg: #064e3b;
+            --success-text: #6ee7b7;
+            --loading-bg: #1e3a8a;
+            --loading-text: #93c5fd;
+            --error-bg: #3b1212;
+            --error-text: #fca5a5;
+        }
+
+        * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif; letter-spacing: -0.01em; }
+        body { margin: 0; padding: 40px; min-height: 100vh; background: var(--bg-gradient); color: var(--text-main); }
+        .container { width: 100%; max-width: 1200px; margin: 0 auto; }
+        
+        header { display: flex; align-items: center; justify-content: space-between; padding-bottom: 24px; margin-bottom: 32px; border-bottom: 1px solid var(--card-border); }
+        .header-title h1 { margin: 0; font-size: 24px; font-weight: 700; color: var(--text-main); }
+        .header-title p { margin: 4px 0 0; color: var(--text-muted); font-size: 13px; }
+        .system-badge { padding: 6px 12px; border: 1px solid #312e81; border-radius: 20px; background: #1e1b4b; color: #818cf8; font-size: 12px; font-weight: 600; }
+
+        .overview-panel { padding: 32px; margin-bottom: 32px; border: 1px solid var(--card-border); border-radius: 16px; background: var(--card-bg); }
+        .overview-panel span { color: var(--text-muted); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+        .overview-panel h2 { margin: 8px 0 4px; font-size: 42px; font-weight: 800; }
+        .overview-description { margin: 0; color: var(--text-muted); font-size: 12px; }
+
+        .dashboard-grid { display: grid; grid-template-columns: 1fr 1.2fr; gap: 32px; }
+        .card { display: flex; flex-direction: column; padding: 28px; border: 1px solid var(--card-border); border-radius: 16px; background: var(--card-bg); }
+        .card h3 { margin: 0 0 20px; font-size: 16px; font-weight: 600; }
+
+        textarea { width: 100%; height: 140px; padding: 16px; border: 1px solid var(--card-border); border-radius: 12px; outline: none; background: var(--input-bg); color: #ffffff; font-size: 14px; line-height: 1.5; resize: none; }
+        textarea::placeholder { color: #4b5563; }
+        textarea:focus { border-color: #4b5563; }
+
+        button { width: 100%; margin-top: 16px; padding: 14px 24px; border: none; border-radius: 12px; background: var(--text-main); color: #000000; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s ease; }
+        button:hover { opacity: 0.9; transform: translateY(-1px); }
+        button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+        #statusMessage { display: none; margin-top: 16px; padding: 14px; border-radius: 10px; font-size: 13px; }
+        .loading { background: var(--loading-bg); color: var(--loading-text); border: 1px solid #1d4ed8; }
+        .success { background: var(--success-bg); color: var(--success-text); border: 1px solid #047857; }
+        .error { background: var(--error-bg); color: var(--error-text); border: 1px solid #7f1d1d; }
+
+        .search-bar { width: 100%; margin-bottom: 20px; padding: 10px 14px; border: 1px solid var(--card-border); border-radius: 10px; outline: none; background: var(--input-bg); color: #ffffff; font-size: 13px; }
+        .search-bar::placeholder { color: #4b5563; }
+        .search-bar:focus { border-color: #4b5563; }
+
+        .table-container { max-height: 380px; overflow-y: auto; padding-right: 4px; }
+        .table-container::-webkit-scrollbar { width: 6px; }
+        .table-container::-webkit-scrollbar-thumb { background: #374151; border-radius: 3px; }
+
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        th { text-align: left; padding: 12px 8px; color: var(--text-muted); font-weight: 500; border-bottom: 1px solid var(--card-border); }
+        td { padding: 16px 8px; border-bottom: 1px solid #1f2937; color: #e2e8f0; vertical-align: middle; }
+        
+        .task-title { font-weight: 600; color: var(--text-main); display: block; margin-bottom: 2px; }
+        .task-meta { font-size: 11px; color: var(--text-muted); }
+        .badge { padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 600; display: inline-block; }
+        .badge-high { background: #2d1616; color: #fca5a5; border: 1px solid #4c1d1d; }
+        .badge-medium { background: #2d2413; color: #fef08a; border: 1px solid #4d3a14; }
+        .badge-low { background: #132d21; color: #a7f3d0; border: 1px solid #144d32; }
     </style>
 </head>
+
 <body>
     <div class="container">
         <header>
-            <h1>🤖 Autonomous AI Systems Control Panel</h1>
-            <p>Full-Stack JavaScript Edge Pipeline — Powered by Prisma 8 & Gemini Infrastructure</p>
+            <div class="header-title">
+                <h1>Secure & Private</h1>
+                <p>System operational data cluster environment</p>
+            </div>
+            <div class="system-badge">Active Engine Loop v8.0</div>
         </header>
 
-        <div class="grid">
-            <!-- Left Side: System Trigger Form -->
+        <div class="overview-panel">
+            <span>Aggregated Data Metrics</span>
+            <h2 id="totalLogsCounter">00</h2>
+            <p class="overview-description">Total synchronized system contracts recorded in cloud database</p>
+        </div>
+
+        <div class="dashboard-grid">
+            <!-- Left Side: Control panel -->
             <div class="card">
-                <h2>🛰️ Deploy System Instruction</h2>
-                <textarea id="inputText" placeholder="Type a messy, raw business task instruction sequence here..."></textarea>
-                <button id="submitBtn">Execute Autonomous Pipeline</button>
+                <h3>🛰️ Deploy System Instruction</h3>
+                <textarea id="inputText" placeholder="Enter raw instruction parameters or task sequence description here..."></textarea>
+                <button id="submitBtn">Execute Next Pipeline Step</button>
                 <div id="statusMessage"></div>
             </div>
 
-            <!-- Right Side: Continuous Database Monitor -->
+            <!-- Right Side: Data history ledger monitor -->
             <div class="card">
-                <h2>🗄️ Real-Time Cloud PostgreSQL Monitor</h2>
-                <div style="overflow-x: auto; max-height: 350px;">
+                <h3>🗄️ Historical Ledger Monitor</h3>
+                <input type="text" id="searchInput" class="search-bar" placeholder="Search operational ledger records instantly...">
+                
+                <div class="table-container">
                     <table>
                         <thead>
                             <tr>
-                                <th>Task Objective</th>
-                                <th>Priority</th>
-                                <th>Hours</th>
+                                <th>Transaction Objective</th>
+                                <th style="width: 100px;">Priority</th>
+                                <th style="width: 80px; text-align: right;">Compute</th>
                             </tr>
                         </thead>
                         <tbody id="logsTableBody">
-                            <tr><td colspan="3" style="text-align:center; color:#64748b;">Loading active records database feed...</td></tr>
+                            <tr><td colspan="3" style="text-align:center; color: var(--text-muted); padding: 40px;">Synchronizing with remote cluster metrics...</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -66,41 +121,65 @@
         </div>
     </div>
 
-    <script>
+        <script>
         const submitBtn = document.getElementById('submitBtn');
         const inputText = document.getElementById('inputText');
+        const searchInput = document.getElementById('searchInput');
         const statusMessage = document.getElementById('statusMessage');
         const logsTableBody = document.getElementById('logsTableBody');
+        const totalLogsCounter = document.getElementById('totalLogsCounter');
 
-        // Function to pull latest logs from Prisma 8 DB
-        async function refreshDatabaseLogs() {
+        // Function to fetch, clean, and map records into the interface display grid
+        async function refreshDatabaseLogs(keyword = '') {
             try {
-                const res = await fetch('/logs');
+                const url = keyword ? `/logs?search=${encodeURIComponent(keyword)}` : '/logs';
+                const res = await fetch(url);
                 const data = await res.json();
-                if (data.success && data.logs.length > 0) {
-                    logsTableBody.innerHTML = data.logs.map(log => `
-                        <tr>
-                            <td style="font-weight:500;">${log.taskName}</td>
-                            <td><span class="badge badge-${log.priority.toLowerCase()}">${log.priority}</span></td>
-                            <td>${log.estimatedHours}h</td>
-                        </tr>
-                    `).join('');
-                } else {
-                    logsTableBody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#64748b;">No records found inside cluster.</td></tr>`;
+                
+                if (data.success) {
+                    totalLogsCounter.innerText = String(data.totalCount).padStart(2, '0');
+                    
+                    if (data.logs.length > 0) {
+                        logsTableBody.innerHTML = data.logs.map(log => {
+                            const dateString = log.createdAt ? new Date(log.createdAt).toLocaleDateString(undefined, {month: 'short', day: 'numeric'}) : 'Recent';
+                            return `
+                                <tr>
+                                    <td>
+                                        <span class="task-title">${log.taskName}</span>
+                                        <span class="task-meta">Asset: ${log.generatedFile || 'None'} • ${dateString}</span>
+                                    </td>
+                                    <td><span class="badge badge-${log.priority.toLowerCase()}">${log.priority}</span></td>
+                                    <td style="text-align: right; font-weight: 600; color: #fff;">${log.estimatedHours}h</td>
+                                </tr>
+                            `;
+                        }).join('');
+                    } else {
+                        logsTableBody.innerHTML = `<tr><td colspan="3" style="text-align:center; color: var(--text-muted); padding: 40px;">No transaction history strings match query parameter.</td></tr>`;
+                    }
                 }
             } catch (err) {
-                logsTableBody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#ef4444;">Failed to sync logs array.</td></tr>`;
+                logsTableBody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#ef4444; padding: 40px;">Data synchronicity interrupted.</td></tr>`;
             }
         }
 
-        // Trigger processing loop when clicking the button
+        // Live input box monitoring containing debounced time pacing loops
+        let searchDebounceTimer;
+        searchInput.addEventListener('input', (e) => {
+            clearTimeout(searchDebounceTimer);
+            searchDebounceTimer = setTimeout(() => {
+                refreshDatabaseLogs(e.target.value.trim());
+            }, 250);
+        });
+
+                // Pipeline task submission handler block
         submitBtn.addEventListener('click', async () => {
             const textValue = encodeURIComponent(inputText.value.trim());
-            if (!textValue) return alert('Please enter an instruction block first.');
+            if (!textValue) return alert('Please input functional code string variables first.');
 
+            submitBtn.disabled = true;
             statusMessage.style.display = 'block';
             statusMessage.className = 'loading';
-            statusMessage.innerText = '📡 Dispatched payload to AI Engine... Please wait.';
+            statusMessage.innerText = '📡 Transporting contract signature tokens over network...';
 
             try {
                 const res = await fetch(`/run-agent?text=${textValue}`);
@@ -108,21 +187,21 @@
                 
                 if (data.status === 'SUCCESS') {
                     statusMessage.className = 'success';
-                    statusMessage.innerHTML = `<strong>✨ Execution Success!</strong><br>Saved File: ${data.message.split('at ')[1]}<br>Cloud UUID: ${data.cloudRecordId}`;
+                    statusMessage.innerHTML = `<strong>✨ Pipe Step Verified</strong><br>Hash index generated cleanly. Ledgers synchronized.`;
                     inputText.value = '';
-                    refreshDatabaseLogs(); // Instantly update table view items
+                    refreshDatabaseLogs(searchInput.value.trim()); 
                 } else {
-                    throw new Error(data.error || 'Server parsing breakdown.');
+                    throw new Error(data.error || 'Pipeline parsing node rejected execution context.');
                 }
             } catch (err) {
-                statusMessage.className = 'success';
-                statusMessage.style.backgroundColor = '#991b1b';
-                statusMessage.style.color = '#fca5a5';
-                statusMessage.innerText = `❌ Error: ${err.message}`;
+                statusMessage.className = 'error';
+                statusMessage.innerText = `❌ Rejection: ${err.message}`;
+            } finally {
+                submitBtn.disabled = false;
             }
         });
 
-        // Initialize table monitoring logs on page display startup
+        // Initialize table content fields during layout display startup
         refreshDatabaseLogs();
     </script>
 </body>
