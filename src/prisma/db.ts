@@ -2,6 +2,7 @@ import 'dotenv/config';
 import postgres from '@prisma/orm-postgres/runtime';
 import type { Contract } from './contract.d';
 import contractJson from './contract.json' with { type: 'json' };
+import "temporal-polyfill/full/global"; // 🎯 Adds global Temporal API support to your Node runtime environment
 
 export const db = postgres<Contract>({
   contractJson,

@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Autonomous AI Systems Operator</title>
+    <style>
+        * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+        body { background: #0f172a; color: #f8fafc; margin: 0; padding: 40px; }
+        .container { max-width: 1100px; margin: 0 auto; }
+        header { border-bottom: 1px solid #334155; padding-bottom: 20px; margin-bottom: 40px; }
+        h1 { margin: 0; color: #38bdf8; font-size: 28px; }
+        p { color: #94a3b8; margin: 5px 0 0; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; }
+        .card { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 24px; }
+        h2 { margin-top: 0; font-size: 18px; color: #f1f5f9; border-bottom: 1px solid #334155; padding-bottom: 10px; }
+        textarea { wIDth: 100%; height: 120px; background: #0f172a; border: 1px solid #475569; border-radius: 8px; color: #fff; padding: 12px; font-size: 14px; resize: none; }
+        button { background: #0284c7; color: #fff; border: none; border-radius: 8px; padding: 12px 24px; font-weight: 600; cursor: pointer; margin-top: 15px; wIDth: 100%; transition: background 0.2s; }
+        button:hover { background: #0369a1; }
+        #statusMessage { margin-top: 15px; padding: 12px; border-radius: 6px; display: none; font-size: 14px; }
+        .success { background: #065f46; color: #34d399; }
+        .loading { background: #1e3a8a; color: #60a5fa; }
+        table { wIDth: 100%; border-collapse: collapse; margin-top: 15px; font-size: 14px; }
+        th { text-align: left; background: #0f172a; padding: 10px; color: #94a3b8; border-bottom: 2px solid #334155; }
+        td { padding: 12px 10px; border-bottom: 1px solid #334155; color: #cbd5e1; }
+        .badge { padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; }
+        .badge-high { background: #991b1b; color: #fca5a5; }
+        .badge-medium { background: #854d0e; color: #fde047; }
+        .badge-low { background: #065f46; color: #34d399; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🤖 Autonomous AI Systems Control Panel</h1>
+            <p>Full-Stack JavaScript Edge Pipeline — Powered by Prisma 8 & Gemini Infrastructure</p>
+        </header>
+
+        <div class="grid">
+            <!-- Left Side: System Trigger Form -->
+            <div class="card">
+                <h2>🛰️ Deploy System Instruction</h2>
+                <textarea id="inputText" placeholder="Type a messy, raw business task instruction sequence here..."></textarea>
+                <button id="submitBtn">Execute Autonomous Pipeline</button>
+                <div id="statusMessage"></div>
+            </div>
+
+            <!-- Right Side: Continuous Database Monitor -->
+            <div class="card">
+                <h2>🗄️ Real-Time Cloud PostgreSQL Monitor</h2>
+                <div style="overflow-x: auto; max-height: 350px;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Task Objective</th>
+                                <th>Priority</th>
+                                <th>Hours</th>
+                            </tr>
+                        </thead>
+                        <tbody id="logsTableBody">
+                            <tr><td colspan="3" style="text-align:center; color:#64748b;">Loading active records database feed...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const submitBtn = document.getElementById('submitBtn');
+        const inputText = document.getElementById('inputText');
+        const statusMessage = document.getElementById('statusMessage');
+        const logsTableBody = document.getElementById('logsTableBody');
+
+        // Function to pull latest logs from Prisma 8 DB
+        async function refreshDatabaseLogs() {
+            try {
+                const res = await fetch('/logs');
+                const data = await res.json();
+                if (data.success && data.logs.length > 0) {
+                    logsTableBody.innerHTML = data.logs.map(log => `
+                        <tr>
+                            <td style="font-weight:500;">${log.taskName}</td>
+                            <td><span class="badge badge-${log.priority.toLowerCase()}">${log.priority}</span></td>
+                            <td>${log.estimatedHours}h</td>
+                        </tr>
+                    `).join('');
+                } else {
+                    logsTableBody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#64748b;">No records found inside cluster.</td></tr>`;
+                }
+            } catch (err) {
+                logsTableBody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#ef4444;">Failed to sync logs array.</td></tr>`;
+            }
+        }
+
+        // Trigger processing loop when clicking the button
+        submitBtn.addEventListener('click', async () => {
+            const textValue = encodeURIComponent(inputText.value.trim());
+            if (!textValue) return alert('Please enter an instruction block first.');
+
+            statusMessage.style.display = 'block';
+            statusMessage.className = 'loading';
+            statusMessage.innerText = '📡 Dispatched payload to AI Engine... Please wait.';
+
+            try {
+                const res = await fetch(`/run-agent?text=${textValue}`);
+                const data = await res.json();
+                
+                if (data.status === 'SUCCESS') {
+                    statusMessage.className = 'success';
+                    statusMessage.innerHTML = `<strong>✨ Execution Success!</strong><br>Saved File: ${data.message.split('at ')[1]}<br>Cloud UUID: ${data.cloudRecordId}`;
+                    inputText.value = '';
+                    refreshDatabaseLogs(); // Instantly update table view items
+                } else {
+                    throw new Error(data.error || 'Server parsing breakdown.');
+                }
+            } catch (err) {
+                statusMessage.className = 'success';
+                statusMessage.style.backgroundColor = '#991b1b';
+                statusMessage.style.color = '#fca5a5';
+                statusMessage.innerText = `❌ Error: ${err.message}`;
+            }
+        });
+
+        // Initialize table monitoring logs on page display startup
+        refreshDatabaseLogs();
+    </script>
+</body>
+</html>
