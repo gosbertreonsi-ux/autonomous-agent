@@ -1,0 +1,35 @@
+// use prisma-8
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  username  String?
+  name      String?
+  posts     Post[]
+  createdAt TimestamptzString @default(now())
+  updatedAt temporal.updatedAtString()
+}
+
+model Post {
+  id        Int      @id @default(autoincrement())
+  title     String
+  content   String?
+  author    User     @relation(fields: [authorId], references: [id])
+  authorId  Int
+  createdAt TimestamptzString @default(now())
+  updatedAt temporal.updatedAtString()
+}
+
+// ... Leave the generated datasource/generator blocks at the top exactly as they are ...
+
+// 🎯 Paste our custom System Log Table back here:
+model AgentLog {
+  id             String   @id @default(uuid())
+  createdAt      DateTime @default(now())
+  rawInputText   String
+  taskName       String
+  priority       String
+  estimatedHours Int
+  generatedFile  String
+}
+

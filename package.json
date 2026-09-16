@@ -5,13 +5,17 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "postinstall": "prisma skills sync || exit 0",
+    "contract:emit": "prisma contract emit"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
     "@google/genai": "^2.22.0",
+    "@prisma/client": "^7.10.0",
+    "@prisma/orm-postgres": "^8.0.0-rc.11",
     "@types/node": "^22.5.4",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
@@ -19,6 +23,8 @@
     "typescript": "^5.5.4"
   },
   "devDependencies": {
-    "@types/express": "^5.0.6"
+    "@prisma/cli-engine": "^0.4.0",
+    "@types/express": "^5.0.6",
+    "prisma": "^8.0.0-rc.15"
   }
 }
